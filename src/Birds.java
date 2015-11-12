@@ -1,29 +1,38 @@
+/**
+ * Created by Vamsi on 11/9/2015.
+ */
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-
-/**
- * Created by Vamsi on 11/9/2015.
- */
 public class Birds {
-   static int[][] pixels = new int[726408][19];
-    static int fileNumber =0;
-    public static void LoadData(Path filePath){
 
+    static final String inputFolderPath = "H:\\NJIT\\Fall 2015\\DataStructures & Algos CS610\\Problem sets\\Birds";
+    static final String saveFilePath = inputFolderPath + "\\clean.ppm";
+    static int fileSize = 0;
+    static int[][] pixels = new int[726408][18];
+    static int fileNumber =0;
+    static String[] configArray = new String[3];
+
+    //This function Loads the Image Data from a filepath given in as parameter into the Pixels 2-D Array for Processing.
+    public static void LoadData(Path filePath){
         BufferedReader reader = null;
         File readFile = new File(String.valueOf(filePath));
         try {
             reader = new BufferedReader(new FileReader(readFile));
             String text = null;
+
             int i = 0;
             while((text=reader.readLine())!=null){
                 if(i>2){
                     pixels[i-3][fileNumber]=Integer.parseInt(text);
+                } else {
+                    configArray[i] = text;
                 }
                 i++;
             }
+            fileSize = i;
             fileNumber++;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -39,65 +48,57 @@ public class Birds {
         }
     }
 
+    // This function Sorts the pixels in the 2D Array row wise. I.e, each row will be sorted making the 13th column as pivot.
+    //hence all the elements to the left of 13th column are less and after it are more. I tried other values but 13th has the
+    //most cleanest image!!
     public static void sortPixels(){
         int j = pixels.length;
         int rowSize = 17;
-
-
         for(int i =0;i<j;i++){
             // sort the row and take the 13th column and store in the output.
-
             int[] tempArray = new int[17];
             for(int m=0;m<17;m++){
                 tempArray[m]= pixels[i][m];
             }
             Arrays.sort(tempArray);
-            int median = tempArray[13];
-            pixels[i][18]= median;
-
-
+            int targetRow = ((int) Math.ceil((Double) (rowSize * .75)));
+            int median = tempArray[targetRow];
+            pixels[i][18] = median; // storing the required value in a new column which is at the end.
+            // since we have 17 images the result is stored in 18th column
         }
-
     }
     public static void main(String args[])  {
-        int fileNumber=0;
-        String FolderPath = "H:\\NJIT\\Fall 2015\\DataStructures & Algos CS610\\Problem sets\\Birds";
+        //This code will open the files in the specified path.
         try {
-            Files.walk(Paths.get("H:\\NJIT\\Fall 2015\\DataStructures & Algos CS610\\Problem sets\\Birds")).forEach(filePath -> {
+            Files.walk(Paths.get(inputFolderPath)).forEach(filePath -> {
                 if (Files.isRegularFile(filePath)) {
-
+                    //load file into the pixel 2D Array.
                   LoadData(filePath);
                 }
             });
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-         File filePath = new File("H:\\NJIT\\Fall 2015\\DataStructures & Algos CS610\\Problem sets\\Birds\\clean.ppm");
-         int j = pixels.length;
-        sortPixels();
-        System.out.println(" **********Length ==" + j + "*******" + pixels[726407][17]);
+        int j = pixels.length;
+        sortPixels();// sort all the rows in the pixel 2D array.
+        //once the array is sorted write the resultant image pixel data into the Clear.ppm file where the image will be clean.
         BufferedWriter writer = null;
+        File savefile = new File(saveFilePath);
         try {
-            filePath.createNewFile();
-             writer = new BufferedWriter(new FileWriter(filePath));
-            int k =0;
-            String value = new Integer(pixels[722360][3]).toString();
-           // writer.write(value+"***** \n");
+            savefile.createNewFile();
+            writer = new BufferedWriter(new FileWriter(savefile));
+            String value = null;
             writer.write("P3\n" +
                     "684 354\n" +
                     "255\n");
+            int k = 0;
             while(k<j) {
-
                 value = new Integer(pixels[k][18]).toString();
                 writer.write(value+"\n");
-
                 k++;
             }
-
-
         }catch (Exception e){
-e.printStackTrace();
+            e.printStackTrace();
         }finally {
             try {
                 writer.close();
